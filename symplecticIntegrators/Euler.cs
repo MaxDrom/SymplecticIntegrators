@@ -12,8 +12,8 @@ public class SymplecticEuler<TField, TSpace> : SymplecticIntegrator<TField, TSpa
 
     public override (TSpace, TSpace) Step(TSpace q0, TSpace p0, TField tau)
     {
-        var result = StepByV(tau, q0, p0);
-        result = StepByT(tau, result.Item1, result.Item2);
-        return result;
+        var (q, p) = StepByV(tau, q0, p0);
+        (q, p) = StepByT(tau, q, p);
+        return (q, p);
     }
 }

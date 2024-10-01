@@ -6,6 +6,9 @@ public abstract class SymplecticIntegrator<TField, TSpace>
     where TSpace : ILinearSpace<TSpace, TField>
 {
     protected TField _two;
+
+    public Func<TSpace, TSpace> dV => _dV;
+    public Func<TSpace, TSpace> dT => _dT;
     protected Func<TSpace, TSpace> _dV;
     protected Func<TSpace, TSpace> _dT;
     public SymplecticIntegrator(Func<TSpace, TSpace> dV, Func<TSpace, TSpace> dT)

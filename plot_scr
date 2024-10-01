@@ -1,0 +1,36 @@
+set terminal png size 1920, 1080
+set output 'plots/traj.png' 
+plot 'results/0.0001_euler_orbit.dat' using 2:3 w lp lc 3 pt 7 ps 0.5 title "euler",\
+ 'results/0.0001_leapfrog_orbit.dat' using 2:3 w lp lc 5 pt 7 ps 0.5 title "leapfrog",\
+ 'results/0.0001_yoshida_orbit.dat' using 2:3 w lp lc 7 pt 7 ps 0.5 title "yoshida", \
+ 'results/0.0001_yoshida6_orbit.dat' using 2:3 w lp lc 9 pt 7 ps 0.5 title "yoshida6"
+
+set terminal png size 1920, 1080
+set output 'plots/en.png' 
+plot 'results/0.1_yoshida_orbit.dat' using 1:6 w lp lc 7 pt 7 ps 0.5 title "yoshida", \
+ 'results/0.1_yoshida6_orbit.dat' using 1:6 w lp lc 9 pt 7 ps 0.5 title "yoshida6"
+
+set terminal png size 1920, 1080
+set output 'plots/pen.png' 
+plot 'results/0.1_euler_pendulum.dat' using 1:2 w lp lc 3 pt 7 ps 0.5 title "euler",\
+ 'results/0.1_leapfrog_pendulum.dat' using 1:2 w lp lc 5 pt 7 ps 0.5 title "leapfrog",\
+ 'results/0.1_yoshida_pendulum.dat' using 1:2 w lp lc 7 pt 7 ps 0.5 title "yoshida", \
+ 'results/0.1_yoshida6_pendulum.dat' using 1:2 w lp lc 9 pt 7 ps 0.5 title "yoshida6"
+
+set terminal png size 1920, 1080
+set output 'plots/pen.png' 
+set xrange [-3.14:3.14]
+set yrange [-3.14:3.14]
+dx(x, y) = 0.1*y
+dy(x, y) = -0.1*sin(x)
+set samples 30    # x-axis
+set isosamples 30 # y-axis
+plot 'results/-1_yoshida_idpen.dat' using 1:2 w lp  pt 7 ps 0.5 title "" ,\
+    'results/-2.5_yoshida_idpen.dat' using 1:2 w p  pt 7 ps 0.5 title "" ,\
+    'results/2.5_yoshida_idpen.dat' using 1:2 w p  pt 7 ps 0.5 title "" ,\
+ 'results/-2_yoshida_idpen.dat' using 1:2 w lp  pt 7 ps 0.5 title "" ,\
+ 'results/-4_yoshida_idpen.dat' using 1:2 w lp  pt 7 ps 0.5 title "" , \
+ 'results/-6_yoshida_idpen.dat' using 1:2 w lp  pt 7 ps 0.5 title "" , \
+ 'results/-3_yoshida_idpen.dat' using 1:2 w lp  pt 7 ps 0.5 title "" , \
+ "++" using 1:2:(dx($1, $2)):(dy($1, $2)) w vec title ""
+

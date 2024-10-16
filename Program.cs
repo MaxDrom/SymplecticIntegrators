@@ -54,33 +54,33 @@ class Program
             }
         }
 
-            using var file1 = new StreamWriter($"results/{-2.5}_yoshida_idpen.dat");
+        using var file1 = new StreamWriter($"results/{-2.5}_yoshida_idpen.dat");
+        
+        foreach (var r in yoshida.Integrate(100.0, 0.01, new Vector<double>([-2.5]), new Vector<double>([2.0])))
+        {
             
-            foreach (var r in yoshida.Integrate(100.0, 0.01, new Vector<double>([-2.5]), new Vector<double>([2.0])))
-            {
-                
-                var (t, q, p) = r;
-                var normalizedDeg = q[0]%(2*Math.PI);
-                if (normalizedDeg <= -Math.PI)
-                    normalizedDeg += 2*Math.PI;
-                else if (normalizedDeg > Math.PI)
-                    normalizedDeg -= 2*Math.PI;
-                file1.WriteLine(normalizedDeg + " " + p + " ");
-            }
+            var (t, q, p) = r;
+            var normalizedDeg = q[0]%(2*Math.PI);
+            if (normalizedDeg <= -Math.PI)
+                normalizedDeg += 2*Math.PI;
+            else if (normalizedDeg > Math.PI)
+                normalizedDeg -= 2*Math.PI;
+            file1.WriteLine(normalizedDeg + " " + p + " ");
+        }
 
-            using var file2 = new StreamWriter($"results/{2.5}_yoshida_idpen.dat");
+        using var file2 = new StreamWriter($"results/{2.5}_yoshida_idpen.dat");
+        
+        foreach (var r in yoshida.Integrate(100.0, 0.01, new Vector<double>([-2.5]), new Vector<double>([-2.0])))
+        {
             
-            foreach (var r in yoshida.Integrate(100.0, 0.01, new Vector<double>([-2.5]), new Vector<double>([-2.0])))
-            {
-                
-                var (t, q, p) = r;
-                var normalizedDeg = q[0]%(2*Math.PI);
-                if (normalizedDeg <= -Math.PI)
-                    normalizedDeg += 2*Math.PI;
-                else if (normalizedDeg > Math.PI)
-                    normalizedDeg -= 2*Math.PI;
-                file2.WriteLine(normalizedDeg + " " + p + " ");
-            }
+            var (t, q, p) = r;
+            var normalizedDeg = q[0]%(2*Math.PI);
+            if (normalizedDeg <= -Math.PI)
+                normalizedDeg += 2*Math.PI;
+            else if (normalizedDeg > Math.PI)
+                normalizedDeg -= 2*Math.PI;
+            file2.WriteLine(normalizedDeg + " " + p + " ");
+        }
     }
     
     static void CreateData<TField>(TField tau, TField T, Func<Vector<TField>, Vector<TField>> dV,

@@ -53,18 +53,119 @@ public class YoshidaIntegrator<TField, TSpace> : SymplecticIntegrator<TField, TS
 
     public static SymplecticIntegrator<TField, TSpace> BuildFromLeapfrog(Func<TSpace, TSpace> dV, Func<TSpace, TSpace> dT, int order)
     {
-        return BuildFromBasic(new Leapfrog<TField, TSpace>(dV, dT), order);
+        if (order == 1)
+            return new Leapfrog<TField, TSpace>(dV, dT);
+
+        var tracer = new Tracer<TField>();
+        var integrator = YoshidaIntegrator<TField, Vector<TField>>.BuildFromBasic(new Leapfrog<TField, Vector<TField>>(tracer.dV, tracer.dT), order);
+        var (q, p) = integrator.Step(new Vector<TField>([TField.Zero]),new Vector<TField>([TField.Zero]), TField.One);
+        return new OptimizedYoshida<TField, TSpace>(tracer.GetReducedSteps(q[0],p[0]), dV, dT);
     }
 
     private static SymplecticIntegrator<TField, TSpace> BuildFromBasic(SymplecticIntegrator<TField, TSpace> basic, int order)
     {
         if (order == 1)
             return basic;
+
         var previosIntegrator = basic;
+        
         for (int i = 1; i < order; i++)
         {
-            previosIntegrator = new YoshidaIntegrator<TField, TSpace>(i, basic);
+            previosIntegrator = new YoshidaIntegrator<TField, TSpace>(i, previosIntegrator);
         }
         return previosIntegrator;
+    }
+}
+
+class OptimizedYoshida<TField, TSpace>: SymplecticIntegrator<TField, TSpace>
+    where TField : IFloatingPoint<TField>
+    where TSpace : ILinearSpace<TSpace, TField>
+{
+    private List<(TField, StepType)> _steps;
+    public OptimizedYoshida(List<(TField, StepType)> steps, Func<TSpace, TSpace> dV, Func<TSpace, TSpace> dT) : base(dV, dT)
+    {
+        _steps = steps;
+    }
+    public override (TSpace, TSpace) Step(TSpace q0, TSpace p0, TField tau)
+    {
+        var (q, p) = (q0, p0);
+        var stepTypes = new Dictionary<StepType, Func<TField, TSpace, TSpace, (TSpace, TSpace)>>();
+        stepTypes[StepType.dV] = StepByV;
+        stepTypes[StepType.dT] = StepByT;
+        foreach(var (_tau, stepType) in _steps)
+            (q, p) = stepTypes[stepType](tau*_tau, q, p);
+        return (q, p);
+    }
+}
+
+enum StepType
+{
+    dV = 0,
+    dT = 1
+}
+
+class Tracer<TField>
+    where TField: IFloatingPoint<TField>
+{
+    private List<(TField, TField, StepType)> _results = new List<(TField, TField, StepType)>();
+    public Vector<TField> dV(Vector<TField> q)
+    {
+        _results.Add((q[0], _p, StepType.dV));
+        _q = q[0];
+        return new Vector<TField>([TField.One]);
+    }
+    private TField _q = TField.Zero;
+    private TField _p = TField.Zero;
+    public Vector<TField> dT(Vector<TField> p)
+    {
+        _results.Add((_q, p[0], StepType.dT));
+        _p = p[0];
+        return new Vector<TField>([TField.One]);
+    }
+
+    private List<(TField, StepType)> GetTau(TField qEnd, TField pEnd)
+    {
+        _results.Reverse();
+        var res = new List<(TField, StepType)>();
+        foreach(var (q, p, type) in _results)
+        {
+            TField tau;
+            if(type == StepType.dV)
+            {
+                // pEnd = p - tau 
+                tau = p - pEnd;
+                pEnd = p;
+            }
+            else
+            {
+                //qEnd = q + tau
+                tau = qEnd-q;
+                qEnd = q;
+            }
+            res.Add((tau, type));
+        }
+
+        _results.Reverse();
+        res.Reverse();
+        return res;
+    }
+
+    public List<(TField, StepType)> GetReducedSteps(TField qEnd, TField pEnd)
+    {
+        var taus = GetTau(qEnd, pEnd);
+        var result = new List<(TField, StepType)>();
+        for(var i = 0; i<taus.Count-1; i++)
+        {
+            if(taus[i].Item2 != taus[i+1].Item2)
+            {
+                result.Add(taus[i]);
+                continue;
+            }
+
+            taus[i+1] = (taus[i].Item1 + taus[i+1].Item1, taus[i].Item2);
+        }
+
+        result.Add(taus[^1]);
+        return result;
     }
 }
